@@ -1,0 +1,8 @@
+left arrow/shift - dodge left
+right arrow/shift - dodge right
+
+you can press either arrow/shift key a second time to "double jump" to the side
+
+when the player sprite touches a projectile, the game ends and a yellow screen is shown
+
+to restart, press the space bar
