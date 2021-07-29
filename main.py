@@ -32,7 +32,7 @@ shifted = False
 #seek_pf = 0
 #speed_pf = 0
 
-background = pygame.image.load('TR Game Jam/ubw_background_sprite.jpg').convert()
+background = pygame.image.load('sprites/ubw_background_sprite.jpg').convert()
 background = pygame.transform.scale(background, (800, 600))
 
 #display level and score as well
@@ -108,24 +108,24 @@ def player_animation():
     if player_index >= len(player_walk): player_index = 0
     player_surf = player_walk[int(player_index)]
 
-weapon_surf = pygame.image.load('TR Game Jam/weapons/axe.png')
+weapon_surf = pygame.image.load('sprites/weapons/axe.png')
 weapon_surf = pygame.transform.scale(weapon_surf, (50, 50)).convert_alpha()
 weapon_rect = weapon_surf.get_rect(midtop = (randint(0, 800), 0))
 
 weapon_list = []
 obstacle_rect_list = []
 
-player_walk_1 = pygame.transform.scale(pygame.image.load('TR Game Jam/emiyasprite.png').convert_alpha(), (30, 45))
-player_walk_2 = pygame.transform.scale(pygame.image.load('TR Game Jam/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_l = pygame.transform.scale(pygame.image.load('TR Game Jam/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_r = pygame.transform.scale(pygame.image.load('TR Game Jam/emiyasprite.png').convert_alpha(), (30, 45))
+player_walk_1 = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
+player_walk_2 = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
+player_slide_l = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
+player_slide_r = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
 player_walk = [player_walk_1, player_walk_2]
 player_index = 0
 
 player_surf = (player_walk[player_index])
 player_rect = player_surf.get_rect(center = (400, 500))
 
-player_stand = pygame.image.load('TR Game Jam/emiyasprite.png').convert_alpha()
+player_stand = pygame.image.load('sprites/emiyasprite.png').convert_alpha()
 player_stand_rect = player_stand.get_rect(center=(400, 300))
 
 game_name = test_font.render('UBW RUN', False, (64, 64, 64))
