@@ -8,6 +8,7 @@ pygame.display.set_caption("Arcade")
 clock = pygame.time.Clock()
 test_font = pygame.font.Font(None, 30)
 start_time = 0
+start_ms = 0
 
 #bgm = pygame.mixer.Sound('ubw_bgm.mp3')
 #bgm.play(loops=-1)
@@ -28,6 +29,7 @@ currency = 0
 blades = 0
 counted = 0
 shifted = False
+lastspawn = 0
 
 background = pygame.image.load('sprites/ubw_background_sprite.jpg').convert()
 background = pygame.transform.scale(background, (800, 600))
@@ -38,11 +40,11 @@ def display_time():
 
   current_time = int(pygame.time.get_ticks()/1000) - start_time
   time_surf = test_font.render(f"Time in Seconds: {current_time}", False, (64, 64, 64))
-  time_rect = time_surf.get_rect(topleft = (0, 100))
+  time_rect = time_surf.get_rect(bottomleft = (0, 600))
   score_surf = test_font.render(f"Score: {score}", False, (64, 64, 64))
-  score_rect = score_surf.get_rect(topleft = (0, 50))
+  score_rect = score_surf.get_rect(bottomleft = (0, 550))
   level_surf = test_font.render(f"Level: {level+1}", False, (64, 64, 64))
-  level_rect = level_surf.get_rect(topleft = (0, 0))
+  level_rect = level_surf.get_rect(bottomleft = (0, 500))
 
   pygame.draw.rect(screen, "#c0e8ec", time_rect)
   pygame.draw.rect(screen, "#c0e8ec", time_rect, 10)
@@ -89,6 +91,7 @@ def obstacle_movement(obstacle_list):
       letter_surf = test_font.render(chr(obstacle_chr_list[corresponding_chr]).upper(), False, (64, 64, 64))
       letter_rect = letter_surf.get_rect(bottomright = (obstacle_rect.x, obstacle_rect.y))
       pygame.draw.rect(screen, "#c0e8ec", letter_rect)
+      pygame.draw.rect(screen, "#c0e8ec", letter_rect, 7)
       screen.blit(weapon_surf, obstacle_rect)
       screen.blit(letter_surf, letter_rect)
       corresponding_chr += 1
@@ -141,9 +144,6 @@ game_rect = game_name.get_rect(center = (400, 150))
 game_message = test_font.render('Press space to start!', False, (64, 64, 64))
 game_message_rect = game_message.get_rect(center = (400, 450))
 
-spawn_timer = pygame.USEREVENT + 1
-pygame.time.set_timer(spawn_timer, 1000 - (level*30))
-
 while True:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
@@ -194,17 +194,6 @@ while True:
           obstacle_chr_list.remove(event.key)
           obstacle_rect_list.remove(obstacle_rect_list[index])
 
-      elif event.type == spawn_timer:
-        x_loc = random.randint(0, 800)
-        if random.randint(0, 2):
-          obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
-        else:
-          #spawn other weapon skin? 2:38:00
-          #save to a list of surfs?
-          #need to generate random letter for 
-
-          obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
-        obstacle_chr_list.append(random.choice(alphabet_keys))
     else:
       #reset variables
       if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -212,18 +201,33 @@ while True:
         player_rect.centerx = 400
         player_pull = 0
         start_time = int(pygame.time.get_ticks() / 1000)
+        start_ms = pygame.time.get_ticks()
         level = 0
         score = 0
         currency = 0
         blades = 0
         counted = 0
         shifted = False
+        lastspawn = 0
         obstacle_rect_list.clear()
         obstacle_chr_list.clear()
   
   if game_active:
     screen.blit(background, (0, 0))
     timed = display_time()
+    ms_timed = pygame.time.get_ticks() - start_ms
+    if ms_timed - 1000 + (level*30) >= lastspawn:
+      x_loc = random.randint(0, 800)
+      lastspawn = ms_timed
+      obstacle_chr_list.append(random.choice(alphabet_keys))
+      if random.randint(0, 2):
+        obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
+      else:
+        #spawn other weapon skin? 2:38:00
+        #save to a list of surfs?
+        #need to generate random letter for 
+
+        obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
 
     obstacle_rect_list = obstacle_movement(obstacle_rect_list)
 
