@@ -216,7 +216,7 @@ while True:
     screen.blit(background, (0, 0))
     timed = display_time()
     ms_timed = pygame.time.get_ticks() - start_ms
-    if ms_timed - 1000 + (level*30) >= lastspawn:
+    if ms_timed - random.randint(800-(level*10), 1000-(level*10)) + (level*30) >= lastspawn:
       x_loc = random.randint(0, 800)
       lastspawn = ms_timed
       obstacle_chr_list.append(random.choice(alphabet_keys))
