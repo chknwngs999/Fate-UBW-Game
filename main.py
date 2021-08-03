@@ -141,6 +141,9 @@ game_rect = game_name.get_rect(center = (width/2, height/4))
 game_message = test_font.render('Press space to start!', False, (64, 64, 64))
 game_message_rect = game_message.get_rect(center = (width/2, 3*height/4))
 
+bgm = pygame.mixer.Sound('audio/ubw_bgm.wav')
+bgm.play(loops=-1)
+
 while True:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
