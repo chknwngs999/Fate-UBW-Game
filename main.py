@@ -7,7 +7,7 @@ screen = pygame.display.set_mode()
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("Fate Game")
 clock = pygame.time.Clock()
-test_font = pygame.font.Font(None, 30)
+test_font = pygame.font.Font('assets/LEMONMILK-Regular.otf', 30)
 start_time = 0
 start_ms = 0
 
@@ -18,7 +18,6 @@ player_pull = 0
 
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 alphabet_keys = [pygame.key.key_code(letter) for letter in alphabet]
-numbers = "1234567890"
 
 timed = 0
 level = 0
@@ -29,7 +28,7 @@ counted = 0
 shifted = False
 lastspawn = 0
 
-background = pygame.image.load('sprites/ubw_background_sprite.jpg').convert()
+background = pygame.image.load('assets/art/ubw_background_sprite.jpg').convert()
 background = pygame.transform.scale(background, (width, height))
 
 #display level and score as well
@@ -115,24 +114,24 @@ def player_animation():
     if player_index >= len(player_walk): player_index = 0
     player_surf = player_walk[int(player_index)]
 
-weapon_surf = pygame.image.load('sprites/weapons/axe.png')
+weapon_surf = pygame.image.load('assets/art/weapons/axe.png')
 weapon_surf = pygame.transform.scale(weapon_surf, (50, 50)).convert_alpha()
 
 weapon_list = []
 obstacle_rect_list = []
 obstacle_chr_list = []
 
-player_walk_1 = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
-player_walk_2 = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_l = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_r = pygame.transform.scale(pygame.image.load('sprites/emiyasprite.png').convert_alpha(), (30, 45))
+player_walk_1 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+player_walk_2 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+player_slide_l = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+player_slide_r = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
 player_walk = [player_walk_1, player_walk_2]
 player_index = 0
 
 player_surf = (player_walk[player_index])
 player_rect = player_surf.get_rect(center = (width/2, height-100))
 
-player_stand = pygame.image.load('sprites/emiyasprite.png').convert_alpha()
+player_stand = pygame.image.load('assets/art/emiyasprite.png').convert_alpha()
 player_stand_rect = player_stand.get_rect(center=(width/2, height/2))
 
 game_name = test_font.render('UBW RUN', False, (64, 64, 64))
@@ -141,7 +140,7 @@ game_rect = game_name.get_rect(center = (width/2, height/4))
 game_message = test_font.render('Press space to start!', False, (64, 64, 64))
 game_message_rect = game_message.get_rect(center = (width/2, 3*height/4))
 
-bgm = pygame.mixer.Sound('audio/ubw_bgm.wav')
+bgm = pygame.mixer.Sound('assets/audio/ubw_bgm.wav')
 bgm.play(loops=-1)
 
 while True:
