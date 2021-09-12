@@ -1,44 +1,160 @@
 import pygame
-from sys import exit
 import random
 
-pygame.init()
-screen = pygame.display.set_mode()
-width, height = pygame.display.get_surface().get_size()
-pygame.display.set_caption("Fate Game")
-clock = pygame.time.Clock()
-test_font = pygame.font.Font('assets/LEMONMILK-Regular.otf', 30)
-start_time = 0
-start_ms = 0
+#add collision detection
+#add typing to delete weapons (or just reopen issue later and revisit later)
+#reset variables on death
+#change variables, stop invading namespaces? (stop using globals)
 
-game_active = False
+class Player(pygame.sprite.Sprite):
+  def __init__(self):
+    super().__init__()
+    walk_1 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+    walk_2 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+    self.slide_l = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+    self.slide_r  = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
+    self.walk = [walk_1, walk_2]
+    self.index = 0
+    
+    self.image = self.walk[self.index]
+    self.rect = self.image.get_rect(center = (width/2, height-100))
+    self.pull = 0
+    self.doublejump = False
 
-doublejump = False
-player_pull = 0
+    self.blades = 0
+    self.currency = 0
+    self.score = 0
 
-alphabet = "abcdefghijklmnopqrstuvwxyz"
-alphabet_keys = [pygame.key.key_code(letter) for letter in alphabet]
+  def reset(self):
+    self.rect = self.image.get_rect(center = (width/2, height-100))
+    self.pull = 0
+    self.doublejump = False
 
-timed = 0
-level = 0
-score = 0
-currency = 0
-blades = 0
-counted = 0
-shifted = False
-lastspawn = 0
+    self.blades = 0
+    self.currency = 0
+    self.score = 0
 
-background = pygame.image.load('assets/art/ubw_background_sprite.jpg').convert()
-background = pygame.transform.scale(background, (width, height))
+  def left(self):
+    if self.rect.centerx == width/2:
+      self.pull = -25
+    elif not self.doublejump:
+      jumpamount = -20-self.pull
+      if jumpamount > -5:
+        jumpamount = -5
+      elif jumpamount < -25:
+        if self.rect.centerx > width/2:
+          jumpamount -= self.pull
+        elif self.pull > 0 and self.pull/3 > -25:
+          jumpamount -= int(self.pull/3)
+        else:
+          jumpamount = -20
+      self.pull += jumpamount
+      self.doublejump = True
 
-#display level and score as well
-def display_time():
-  global level, counted
+  def right(self):
+    if self.rect.centerx == width/2:
+      self.pull = 25
+    elif not self.doublejump:
+      jumpamount = 20-self.pull
+      if jumpamount < 5:
+        jumpamount = 5
+      elif jumpamount > 25:
+        if self.rect.centerx < width/2 :
+          jumpamount -= self.pull
+        elif self.pull < 0 and self.pull/3 < 25:
+          jumpamount -= int(self.pull/3)
+        else:
+          jumpamount = 20
+      self.pull += jumpamount
+      self.doublejump = True
 
-  current_time = int(pygame.time.get_ticks()/1000) - start_time
-  time_surf = test_font.render(f"Time in Seconds: {current_time}", False, (64, 64, 64))
+  def apply_move(self):
+    if self.rect.centerx > width/2 and self.pull > -30: self.pull -= 1
+    elif self.rect.centerx < width/2 and self.pull < 30: self.pull += 1
+
+    self.rect.centerx += self.pull
+    if self.rect.centerx <= (width/2+abs(self.pull)-1) and self.rect.centerx >= (width/2-abs(self.pull)+1):
+      self.pull = 0
+      self.rect.centerx = width/2
+      self.doublejump = False
+
+  def player_animation(self):
+    if self.pull > 0:
+      self.image = self.slide_r
+    elif self.pull < 0:
+      self.image = self.slide_l
+    else:
+      self.index += 0.1
+      if self.index >= len(self.walk): self.index = 0
+      self.image = self.walk[int(self.index)]
+
+  def update(self):
+    self.apply_move()
+    self.player_animation()
+
+#pause on spawn
+#separate class for corresponding character? or just add to list like normal and then draw/blit those
+class Obstacle(pygame.sprite.Sprite):
+  def __init__(self, type):
+    super().__init__()
+
+    if type == 'axe':
+      axe_1 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
+      axe_2 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
+      self.frames = [axe_1, axe_2]
+
+    self.animation_index = 0
+    self.image = self.frames[self.animation_index]
+    self.rect = self.image.get_rect(midtop = (random.randint(0, width), 0))
+    self.shifted = False
+    
+    """alphabet_keys = [pygame.key.key_code(letter) for letter in "abcdefghijklmnopqrstuvwxyz"]
+    self.character = chr(random.choice(alphabet_keys)).upper()
+    self.character_img = test_font.render(self.character, False, (64, 64, 64))
+    self.character_rect = self.character_img.get_rect(bottomright = (self.rect.x, self.rect.y))"""
+
+  def animation_state(self):
+    self.animation_index += 0.1
+    if self.animation_index >= len(self.frames): self.animation_index = 0
+    self.image = self.frames[int(self.animation_index)]
+  
+  def movement(self, player):
+    self.rect.y += 3 + int(level/2)
+    if self.rect.y < height-100:
+      if not self.shifted:
+        if (player.sprite.rect.centerx-2-(level/2)) > self.rect.centerx:
+          self.rect.x += 2
+          self.rect.x += int(level/2)
+        elif (player.sprite.rect.centerx+2+(level/2)) < self.rect.centerx:
+          self.rect.x -= 2
+          self.rect.x -= int(level/2)
+    else:
+      self.rect.y += 2
+      if self.rect.y >= height:
+        increment()
+        self.kill()
+        
+    """screen.blit(self.character_img, self.character_rect)
+    pygame.draw.rect(screen, "#c0e8ec", self.character_rect)
+    pygame.draw.rect(screen, "#c0e8ec", self.character_rect, 7)
+    self.shifted = not self.shifted"""
+
+  def update(self):
+    self.animation_state()
+    self.movement(player)
+
+#display level + score
+def display_stats():
+  global level, counted, timed
+
+  timed = int(pygame.time.get_ticks()/1000) - start_time
+  if timed % 15 == 0 and timed != counted:
+    level += 1
+    counted = timed
+  
+  time_surf = test_font.render(f"Time in Seconds: {timed}", False, (64, 64, 64))
   time_rect = time_surf.get_rect(bottomleft = (0, height))
-  score_surf = test_font.render(f"Score: {score}", False, (64, 64, 64))
+  score_surf = test_font.render(f"Score: {player.sprite.score}", False, (64, 64, 64))
   score_rect = score_surf.get_rect(bottomleft = (0, height-50))
   level_surf = test_font.render(f"Level: {level+1}", False, (64, 64, 64))
   level_rect = level_surf.get_rect(bottomleft = (0, height-100))
@@ -53,95 +169,58 @@ def display_time():
   screen.blit(score_surf, score_rect)
   screen.blit(level_surf, level_rect)
 
-  if current_time % 15 == 0 and current_time != counted:
-    level += 1
-    counted = current_time
-    
-  return current_time
-
-#every other frame?
-#SHIFT INCREASES OVER LEVELS
-def obstacle_movement(obstacle_list):
-  global blades, score, currency, level, timed, time_obstacle_counted, shifted, obstacle_rect_list, obstacle_chr_list
-  corresponding_chr = 0
-  if obstacle_list:
-    for obstacle_rect in obstacle_list:
-      obstacle_rect.y += 3 + int(level/2)
-      if obstacle_rect.y < height-100:
-        if not shifted:
-          if (player_rect.centerx-2-(level/2)) > obstacle_rect.centerx:
-            obstacle_rect.x += 2
-            obstacle_rect.x += int(level/2)
-          elif (player_rect.centerx+2+(level/2)) < obstacle_rect.centerx:
-            obstacle_rect.x -= 2
-            obstacle_rect.x -= int(level/2)
-      else:
-        obstacle_rect.y += 2
-        if obstacle_rect.y >= height:
-          blades += 1
-          score += 1 + level
-          currency += 1 + level
-          index = obstacle_rect_list.index(obstacle_rect)
-          obstacle_rect_list.remove(obstacle_rect)
-          obstacle_chr_list.remove(obstacle_chr_list[index])
-        
-      letter_surf = test_font.render(chr(obstacle_chr_list[corresponding_chr]).upper(), False, (64, 64, 64))
-      letter_rect = letter_surf.get_rect(bottomright = (obstacle_rect.x, obstacle_rect.y))
-      pygame.draw.rect(screen, "#c0e8ec", letter_rect)
-      pygame.draw.rect(screen, "#c0e8ec", letter_rect, 7)
-      screen.blit(weapon_surf, obstacle_rect)
-      screen.blit(letter_surf, letter_rect)
-      corresponding_chr += 1
-    shifted = not shifted
-    return obstacle_list
-  return []
-
-def collisions(player, obstacles):
-  if obstacles:
-    for obstacle_rect in obstacles:
-      if player.colliderect(obstacle_rect): return False
+def collision_sprite():
+  if pygame.sprite.spritecollide(player.sprite, obstacles, False):
+    obstacles.empty()
+    return False
   return True
+def increment():
+  global player
+  player.sprite.blades += 1
+  player.sprite.score += 1 + level
+  player.sprite.currency += 1 + level
 
-def player_animation():
-  global player_surf, player_index
+pygame.init()
 
-  if player_pull > 0:
-    player_surf = player_slide_r
-  elif player_pull < 0:
-    player_surf = player_slide_l
-  else:
-    player_index += 0.1
-    if player_index >= len(player_walk): player_index = 0
-    player_surf = player_walk[int(player_index)]
+screen = pygame.display.set_mode() #100 px off all? toggle size?
+width, height = pygame.display.get_surface().get_size()
+pygame.display.set_caption("Fate Game")
 
-weapon_surf = pygame.image.load('assets/art/weapons/axe.png')
-weapon_surf = pygame.transform.scale(weapon_surf, (50, 50)).convert_alpha()
+clock = pygame.time.Clock()
+test_font = pygame.font.Font('assets/LEMONMILK-Regular.otf', 30)
 
+game_active = False
+start_time = 0
+start_ms = 0
+timed = 0
+level = 0
+counted = 0
+lastspawn = 0
+
+background = pygame.image.load('assets/art/ubw_background_sprite.jpg').convert()
+background = pygame.transform.scale(background, (width, height))
+
+game_name = test_font.render('UBW RUN', False, (64, 64, 64))
+game_rect = game_name.get_rect(center = (width/2, height/4))
+game_message = test_font.render('Press space to start!', False, (64, 64, 64))
+game_message_rect = game_message.get_rect(center = (width/2, 3*height/4))
+player_stand = pygame.image.load('assets/art/emiyasprite.png').convert_alpha()
+player_stand_rect = player_stand.get_rect(center=(width/2, height/2))
+
+weapon_surf = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
 weapon_list = []
 obstacle_rect_list = []
 obstacle_chr_list = []
 
-player_walk_1 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
-player_walk_2 = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_l = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
-player_slide_r = pygame.transform.scale(pygame.image.load('assets/art/emiyasprite.png').convert_alpha(), (30, 45))
-player_walk = [player_walk_1, player_walk_2]
-player_index = 0
+player = pygame.sprite.GroupSingle()
+player.add(Player())
 
-player_surf = (player_walk[player_index])
-player_rect = player_surf.get_rect(center = (width/2, height-100))
+obstacles = pygame.sprite.Group()
 
-player_stand = pygame.image.load('assets/art/emiyasprite.png').convert_alpha()
-player_stand_rect = player_stand.get_rect(center=(width/2, height/2))
-
-game_name = test_font.render('UBW RUN', False, (64, 64, 64))
-game_rect = game_name.get_rect(center = (width/2, height/4))
-
-game_message = test_font.render('Press space to start!', False, (64, 64, 64))
-game_message_rect = game_message.get_rect(center = (width/2, 3*height/4))
-
+soundcontrol = 0.25
 bgm = pygame.mixer.Sound('assets/audio/ubw_bgm.wav')
-bgm.play(loops=-1)
+bgm.set_volume(soundcontrol)
+#bgm.play(loops=-1)
 
 while True:
   for event in pygame.event.get():
@@ -152,100 +231,54 @@ while True:
     if game_active:
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LEFT or event.key == pygame.K_LSHIFT:
-          if player_rect.centerx == width/2:
-            player_pull = -25
-          elif not doublejump:
-            jumpamount = -20-player_pull
-            if jumpamount > -5:
-              jumpamount = -5
-            elif jumpamount < -25:
-              if player_rect.centerx > width/2:
-                jumpamount -= player_pull
-              elif player_pull > 0 and player_pull/3 > -25:
-                jumpamount -= int(player_pull/3)
-              else:
-                jumpamount = -20
-            player_pull += jumpamount
-            doublejump = True
-
+          player.sprite.left()
         elif event.key == pygame.K_RIGHT or event.key == pygame.K_RSHIFT:
-          if player_rect.centerx == width/2:
-            player_pull = 25
-          elif not doublejump:
-            jumpamount = 20-player_pull
-            if jumpamount < 5:
-              jumpamount = 5
-            elif jumpamount > 25:
-              if player_rect.centerx < width/2 :
-                jumpamount -= player_pull
-              elif player_pull < 0 and player_pull/3 < 25:
-                jumpamount -= int(player_pull/3)
-              else:
-                jumpamount = 20
-            player_pull += jumpamount
-            doublejump = True
+          player.sprite.right()
 
         elif event.key in obstacle_chr_list:
-          blades += 1
-          score += 1 + level
-          currency += 1 + level
           index = obstacle_chr_list.index(event.key)
           obstacle_chr_list.remove(event.key)
           obstacle_rect_list.remove(obstacle_rect_list[index])
 
     else:
       #reset variables
-      if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not game_active:
         game_active = True
-        player_rect.centerx = width/2
-        player_pull = 0
+        #player_rect.centerx = width/2
+        
+        #reset variables
+        
         start_time = int(pygame.time.get_ticks() / 1000)
         start_ms = pygame.time.get_ticks()
-        level = 0
-        score = 0
-        currency = 0
-        blades = 0
+        player.sprite.reset()
+
         counted = 0
-        shifted = False
         lastspawn = 0
         obstacle_rect_list.clear()
         obstacle_chr_list.clear()
   
   if game_active:
-    screen.blit(background, (0, 0))
-    timed = display_time()
     ms_timed = pygame.time.get_ticks() - start_ms
-    if ms_timed - random.randint(800-(level*10), 1000-(level*10)) + (level*30) >= lastspawn:
-      x_loc = random.randint(0, width)
+    if ms_timed - random.randint(800, 1000) + (level*20) >= lastspawn:
+      obstacles.add(Obstacle('axe'))
       lastspawn = ms_timed
-      obstacle_chr_list.append(random.choice(alphabet_keys))
-      if random.randint(0, 2):
-        obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
-      else:
-        #spawn other weapon skin? 2:38:00
-        obstacle_rect_list.append(weapon_surf.get_rect(midtop = (x_loc, 0)))
+      #obstacle_chr_list.append(random.choice(alphabet_keys))
 
-    obstacle_rect_list = obstacle_movement(obstacle_rect_list)
+    screen.blit(background, (0, 0))
+    
+    display_stats()
 
-    if player_rect.centerx > width/2 and player_pull >= -30: player_pull -= 1
-    elif player_rect.centerx < width/2 and player_pull <= 30: player_pull += 1
-
-    player_rect.centerx += player_pull
-    if player_rect.centerx <= (width/2+abs(player_pull)-1) and player_rect.centerx >= (width/2-abs(player_pull)+1):
-      player_pull = 0
-      player_rect.centerx = width/2
-      doublejump = False
-    player_animation()
-    screen.blit(player_surf, player_rect)
-
-    game_active = collisions(player_rect, obstacle_rect_list)
-
+    player.draw(screen)
+    player.update()
+    obstacles.draw(screen)
+    obstacles.update()
+    game_active = collision_sprite()
   else:
     #check if game is in menu or ended
-    screen.fill('Yellow')
+    screen.blit(background, (0, 0))
     screen.blit(player_stand, player_stand_rect)
     
-    score_message = test_font.render(f"You survived for {timed} seconds, dodged {blades} blades, and had a final score of {score}!", False, (64, 64, 64))
+    score_message = test_font.render(f"You survived for {timed} seconds, dodged {player.sprite.blades} blades, and had a final score of {player.sprite.score}!", False, (64, 64, 64))
     score_message_rect = score_message.get_rect(center = (width/2, 3*height/4))
     screen.blit(game_name, game_rect)
     
