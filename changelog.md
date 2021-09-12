@@ -10,6 +10,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
  - Scale ALL assets with window size?
  - Remove unused mp3 files, use other wav files
  - Move other functions into classes? (is it fine to have some FP?)
+ - Add directory for changelog
+ - Fix/remove/move all functions, variables, etc to fit OOP
+
+## [0.1.0] - 2021-09-12
+### ADDED
+ - Created changelog and pushed to github
+### CHANGED
+ - Initial commit after converting basically ALL code (variables, functions, etc) to be in classes
+### DEPRECATED
+### REMOVED
+### FIXED
+### SECURITY
 
 ## [0.0.8] - 2021-08-04
 ### ADDED
