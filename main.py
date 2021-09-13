@@ -1,11 +1,6 @@
 import pygame
 import random
 
-#add collision detection
-#add typing to delete weapons (or just reopen issue later and revisit later)
-#reset variables on death
-#change variables, stop invading namespaces? (stop using globals)
-
 class Player(pygame.sprite.Sprite):
   def __init__(self):
     super().__init__()
@@ -92,15 +87,11 @@ class Player(pygame.sprite.Sprite):
     self.apply_move()
     self.player_animation()
 
-#pause on spawn
-#separate class for corresponding character? or just add to list like normal and then draw/blit those
 class Obstacle(pygame.sprite.Sprite):
   def __init__(self, type):
     super().__init__()
 
     if type == 'axe':
-      axe_1 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
-      axe_2 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
       self.frames = [axe_1, axe_2]
 
     self.animation_index = 0
@@ -110,7 +101,7 @@ class Obstacle(pygame.sprite.Sprite):
     
     """alphabet_keys = [pygame.key.key_code(letter) for letter in "abcdefghijklmnopqrstuvwxyz"]
     self.character = chr(random.choice(alphabet_keys)).upper()
-    self.character_img = test_font.render(self.character, False, (64, 64, 64))
+    self.character_img = lemonmilk_font.render(self.character, False, (64, 64, 64))
     self.character_rect = self.character_img.get_rect(bottomright = (self.rect.x, self.rect.y))"""
 
   def animation_state(self):
@@ -152,11 +143,11 @@ def display_stats():
     level += 1
     counted = timed
   
-  time_surf = test_font.render(f"Time in Seconds: {timed}", False, (64, 64, 64))
+  time_surf = lemonmilk_font.render(f"Time in Seconds: {timed}", False, (64, 64, 64))
   time_rect = time_surf.get_rect(bottomleft = (0, height))
-  score_surf = test_font.render(f"Score: {player.sprite.score}", False, (64, 64, 64))
+  score_surf = lemonmilk_font.render(f"Score: {player.sprite.score}", False, (64, 64, 64))
   score_rect = score_surf.get_rect(bottomleft = (0, height-50))
-  level_surf = test_font.render(f"Level: {level+1}", False, (64, 64, 64))
+  level_surf = lemonmilk_font.render(f"Level: {level+1}", False, (64, 64, 64))
   level_rect = level_surf.get_rect(bottomleft = (0, height-100))
 
   pygame.draw.rect(screen, "#c0e8ec", time_rect)
@@ -168,7 +159,6 @@ def display_stats():
   screen.blit(time_surf, time_rect)
   screen.blit(score_surf, score_rect)
   screen.blit(level_surf, level_rect)
-
 def collision_sprite():
   if pygame.sprite.spritecollide(player.sprite, obstacles, False):
     obstacles.empty()
@@ -184,32 +174,32 @@ pygame.init()
 
 screen = pygame.display.set_mode() #100 px off all? toggle size?
 width, height = pygame.display.get_surface().get_size()
-pygame.display.set_caption("Fate Game")
+pygame.display.set_caption("Fate/Stay Night: Unlimited Blade Works Game")
 
 clock = pygame.time.Clock()
-test_font = pygame.font.Font('assets/LEMONMILK-Regular.otf', 30)
+lemonmilk_font = pygame.font.Font('assets/LEMONMILK-Regular.otf', 30)
 
 game_active = False
-start_time = 0
-start_ms = 0
-timed = 0
+lastspawn = 0
 level = 0
 counted = 0
-lastspawn = 0
+timed = 0
+start_time = 0
+start_ms = 0
 
 background = pygame.image.load('assets/art/ubw_background_sprite.jpg').convert()
 background = pygame.transform.scale(background, (width, height))
 
-game_name = test_font.render('UBW RUN', False, (64, 64, 64))
+game_name = lemonmilk_font.render('UBW RUN', False, (64, 64, 64))
 game_rect = game_name.get_rect(center = (width/2, height/4))
-game_message = test_font.render('Press space to start!', False, (64, 64, 64))
+game_message = lemonmilk_font.render('Press space to start!', False, (64, 64, 64))
 game_message_rect = game_message.get_rect(center = (width/2, 3*height/4))
 player_stand = pygame.image.load('assets/art/emiyasprite.png').convert_alpha()
 player_stand_rect = player_stand.get_rect(center=(width/2, height/2))
 
-weapon_surf = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
-weapon_list = []
-obstacle_rect_list = []
+axe_1 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
+axe_2 = pygame.transform.scale(pygame.image.load('assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
+
 obstacle_chr_list = []
 
 player = pygame.sprite.GroupSingle()
@@ -220,7 +210,7 @@ obstacles = pygame.sprite.Group()
 soundcontrol = 0.25
 bgm = pygame.mixer.Sound('assets/audio/ubw_bgm.wav')
 bgm.set_volume(soundcontrol)
-#bgm.play(loops=-1)
+bgm.play(loops=-1)
 
 while True:
   for event in pygame.event.get():
@@ -238,7 +228,7 @@ while True:
         elif event.key in obstacle_chr_list:
           index = obstacle_chr_list.index(event.key)
           obstacle_chr_list.remove(event.key)
-          obstacle_rect_list.remove(obstacle_rect_list[index])
+          #kill obstacle
 
     else:
       #reset variables
@@ -254,7 +244,6 @@ while True:
 
         counted = 0
         lastspawn = 0
-        obstacle_rect_list.clear()
         obstacle_chr_list.clear()
   
   if game_active:
@@ -278,7 +267,7 @@ while True:
     screen.blit(background, (0, 0))
     screen.blit(player_stand, player_stand_rect)
     
-    score_message = test_font.render(f"You survived for {timed} seconds, dodged {player.sprite.blades} blades, and had a final score of {player.sprite.score}!", False, (64, 64, 64))
+    score_message = lemonmilk_font.render(f"You survived for {timed} seconds, dodged {player.sprite.blades} blades, and had a final score of {player.sprite.score}!", False, (64, 64, 64))
     score_message_rect = score_message.get_rect(center = (width/2, 3*height/4))
     screen.blit(game_name, game_rect)
     
