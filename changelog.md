@@ -13,6 +13,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
  - Add directory for changelog
  - Fix/remove/move all functions, variables, etc to fit OOP
 
+## [0.2.1] - 2021-09-12
+### ADDED
+### CHANGED
+ - Renamed window name
+ - Renamed font name, change corresponding references
+ - Reorganized some variables
+### DEPRECATED
+### REMOVED
+ - Removed some comments with ideas for fixes and moved to toadd.txt for organization purposes
+ - Removed another unused variable
+### FIXED
+ - Fixed weapon lag on spawn. This was being caused by the game loading the assets everytime time an obstacle was created. The fix was to remove the image loading to outside of the class in order to load it only once, then reference that variable within the initialization of the object.
+### SECURITY
+
 ## [0.2.0] - 2021-09-12
 ### ADDED
  - Created changelog and pushed to github
