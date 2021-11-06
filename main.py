@@ -106,12 +106,12 @@ class Obstacle(pygame.sprite.Sprite):
         self.animation_index = 0
         self.image = self.frames[self.animation_index]
         self.rect = self.image.get_rect(midtop=(random.randint(0, width), 0))
-        self.shifted = False
 
-        """alphabet_keys = [pygame.key.key_code(letter) for letter in "abcdefghijklmnopqrstuvwxyz"]
-    self.character = chr(random.choice(alphabet_keys)).upper()
-    self.character_img = lemonmilk_font.render(self.character, False, (64, 64, 64))
-    self.character_rect = self.character_img.get_rect(bottomright = (self.rect.x, self.rect.y))"""
+        self.character = chr(random.choice(alphabet_keys)).upper()
+        self.character_img = lemonmilk_font.render(
+            self.character, False, (64, 64, 64))
+        self.character_rect = self.character_img.get_rect(
+            bottomright=(self.rect.x, self.rect.y))
 
     def animation_state(self):
         self.animation_index += 0.1
@@ -122,42 +122,45 @@ class Obstacle(pygame.sprite.Sprite):
     def movement(self, player):
         self.rect.y += 3 + int(level/2)
         if self.rect.y < height-100:
-            if not self.shifted:
-                if (player.sprite.rect.centerx-2-(level/2)) > self.rect.centerx:
-                    self.rect.x += 2
-                    self.rect.x += int(level/2)
-                elif (player.sprite.rect.centerx+2+(level/2)) < self.rect.centerx:
-                    self.rect.x -= 2
-                    self.rect.x -= int(level/2)
+            if (player.sprite.rect.centerx-2-(level/2)) > self.rect.centerx:
+                self.rect.x += 2
+                self.rect.x += int(level/2)
+            elif (player.sprite.rect.centerx+2+(level/2)) < self.rect.centerx:
+                self.rect.x -= 2
+                self.rect.x -= int(level/2)
         else:
             self.rect.y += 2
             if self.rect.y >= height:
-                increment()
                 self.kill()
-
-        """screen.blit(self.character_img, self.character_rect)
-    pygame.draw.rect(screen, "#c0e8ec", self.character_rect)
-    pygame.draw.rect(screen, "#c0e8ec", self.character_rect, 7)
-    self.shifted = not self.shifted"""
+        self.character_img = lemonmilk_font.render(
+            self.character, False, (64, 64, 64))
+        self.character_rect = self.character_img.get_rect(
+            bottomright=(self.rect.x, self.rect.y))
 
     def update(self):
         self.animation_state()
         self.movement(player)
+        pygame.draw.rect(screen, "#c0e8ec", self.character_rect)
+        pygame.draw.rect(screen, "#c0e8ec", self.character_rect, 7)
+        screen.blit(self.character_img, self.character_rect)
 
-# class extending obstacles for letters + separate group?
-# display level + score
+    def kill(self):
+        pygame.sprite.Sprite.kill(self)
+        player.sprite.blades += 1
+        player.sprite.score += 1 + level
+        player.sprite.currency += 1 + level
 
 
 def display_stats():
     global level, counted, timed
 
     timed = int(pygame.time.get_ticks()/1000) - start_time
-    if timed % 15 == 0 and timed != counted:
+    if timed % 12 == 0 and timed != counted:
         level += 1
         counted = timed
 
     time_surf = lemonmilk_font.render(
-        f"Time in Seconds: {timed}", False, (64, 64, 64))
+        f"Time: {timed}", False, (64, 64, 64))
     time_rect = time_surf.get_rect(bottomleft=(0, height))
     score_surf = lemonmilk_font.render(
         f"Score: {player.sprite.score}", False, (64, 64, 64))
@@ -182,12 +185,6 @@ def collision_sprite():
         obstacles.empty()
         return False
     return True
-
-
-def increment():
-    player.sprite.blades += 1
-    player.sprite.score += 1 + level
-    player.sprite.currency += 1 + level
 
 
 pygame.init()
@@ -225,12 +222,15 @@ axe_1 = pygame.transform.scale(pygame.image.load(
 axe_2 = pygame.transform.scale(pygame.image.load(
     'assets/art/weapons/axe.png'), (50, 50)).convert_alpha()
 
-obstacle_chr_list = []
+alphabet_keys = [pygame.key.key_code(letter)
+                 for letter in "abcdefghijklmnopqrstuvwxyz"]
 
 player = pygame.sprite.GroupSingle()
 player.add(Player())
 
 obstacles = pygame.sprite.Group()
+obstacle_chr_list = [pygame.key.key_code(
+    sprite.character) for sprite in obstacles]
 
 soundcontrol = 0.25
 bgm = pygame.mixer.Sound('assets/audio/ubw_bgm.wav')
@@ -251,15 +251,14 @@ while True:
                     player.sprite.right()
 
                 elif event.key in obstacle_chr_list:
-                    index = obstacle_chr_list.index(event.key)
-                    obstacle_chr_list.remove(event.key)
-                    # kill obstacle
+                    killindex = obstacle_chr_list.index(event.key)
+                    obstacles.sprites()[killindex].kill()
+                    obstacle_chr_list = [pygame.key.key_code(
+                        sprite.character) for sprite in obstacles]
 
         else:
-            # reset variables
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not game_active:
                 game_active = True
-                #player_rect.centerx = width/2
 
                 start_time = int(pygame.time.get_ticks() / 1000)
                 start_ms = pygame.time.get_ticks()
@@ -272,16 +271,18 @@ while True:
 
     if game_active:
         ms_timed = pygame.time.get_ticks() - start_ms
-        if ms_timed - delay_spawn + (level*20) >= lastspawn:
+        if ms_timed - delay_spawn + (level*50) >= lastspawn:
             delay_spawn = random.randint(800, 1000)
             obstacles.add(Obstacle('axe'))
             lastspawn = ms_timed
-            # obstacle_chr_list.append(random.choice(alphabet_keys))
+            delay_spawn = random.randint(800, 1000)
 
         screen.blit(background, (0, 0))
 
         display_stats()
 
+        obstacle_chr_list = [pygame.key.key_code(
+            sprite.character) for sprite in obstacles]
         player.draw(screen)
         player.update()
         obstacles.draw(screen)
