@@ -140,8 +140,8 @@ class Obstacle(pygame.sprite.Sprite):
     def update(self):
         self.animation_state()
         self.movement(player)
-        pygame.draw.rect(screen, "#c0e8ec", self.character_rect)
-        pygame.draw.rect(screen, "#c0e8ec", self.character_rect, 7)
+        pygame.draw.rect(screen, "#D37506", self.character_rect, border_radius=5)
+        pygame.draw.rect(screen, "#D37506", self.character_rect, 7, border_radius=5)
         screen.blit(self.character_img, self.character_rect)
 
     def kill(self):
@@ -169,12 +169,12 @@ def display_stats():
         f"Level: {level+1}", False, (64, 64, 64))
     level_rect = level_surf.get_rect(bottomleft=(0, height-100))
 
-    pygame.draw.rect(screen, "#c0e8ec", time_rect)
-    pygame.draw.rect(screen, "#c0e8ec", time_rect, 10)
-    pygame.draw.rect(screen, "#c0e8ec", score_rect)
-    pygame.draw.rect(screen, "#c0e8ec", score_rect, 10)
-    pygame.draw.rect(screen, "#c0e8ec", level_rect)
-    pygame.draw.rect(screen, "#c0e8ec", level_rect, 10)
+    pygame.draw.rect(screen, "#D37506", time_rect, border_radius=5)
+    pygame.draw.rect(screen, "#D37506", time_rect, 10, border_radius=5)
+    pygame.draw.rect(screen, "#D37506", score_rect, border_radius=5)
+    pygame.draw.rect(screen, "#D37506", score_rect, 10, border_radius=5)
+    pygame.draw.rect(screen, "#D37506", level_rect, border_radius=5)
+    pygame.draw.rect(screen, "#D37506", level_rect, 10, border_radius=5)
     screen.blit(time_surf, time_rect)
     screen.blit(score_surf, score_rect)
     screen.blit(level_surf, level_rect)
